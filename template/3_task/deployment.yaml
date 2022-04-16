@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: twogis-geokoder
+spec:
+  ports:
+    - name: web
+      protocol: TCP
+      port: 443
+      targetPort: 443
+---
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: twogis-geokoder
+subsets:
+  - addresses:
+        - ip: 91.236.49.5
+    ports:
+      - port: 443
+        name: web

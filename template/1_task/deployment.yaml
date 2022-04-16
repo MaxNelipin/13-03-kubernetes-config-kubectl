@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: default
+spec:
+  ports:
+    - name: web
+      port: 8000
+      targetPort: 80
+  selector:
+    app: stage
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: default
+spec:
+  ports:
+    - name: web
+      port: 9000
+  selector:
+    app: stage
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: default
+spec:
+  ports:
+    - name: db
+      port: 5432
+  selector:
+    app: db
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: stage
+  name: stage
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stage
+  template:
+    metadata:
+      labels:
+        app: stage
+    spec:
+      containers:
+      - image: maxnelipin/13-frontend
+        imagePullPolicy: IfNotPresent
+        name: frontend
+        ports:
+          - containerPort: 80
+      - image: maxnelipin/13-backend
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+          - containerPort: 9000
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  replicas: 1
+  serviceName: db
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: postgres:13-alpine
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+
+            - name: POSTGRES_PASSWORD
+              value: postgres
+
+            - name: POSTGRES_DB
+              value: news
+          ports:
+            - containerPort: 5432
